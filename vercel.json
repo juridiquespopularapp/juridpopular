@@ -6,8 +6,15 @@
       "VITE_OPENROUTER_API_KEY": "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"
     }
   },
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "api/**"
+    }
+  },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/api/criar-preferencia", "destination": "/api/criar-preferencia.js" },
+    { "source": "/api/webhook", "destination": "/api/webhook.js" },
+    { "source": "/api/ana", "destination": "/api/ana.js" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
