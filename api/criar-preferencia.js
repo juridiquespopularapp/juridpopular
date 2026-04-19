@@ -13,20 +13,78 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Metodo nao permitido' })
   }
 
-  const { tipo, usuarioId, usuarioEmail } = req.body
+  const { tipo, usuarioId, usuarioEmail, processoHash } = req.body
 
-  // Verificar env vars - retorna na resposta
   const clientId = process.env.KIWIFY_CLIENT_ID
   const clientSecret = process.env.KIWIFY_CLIENT_SECRET
-  
-  return res.status(200).json({ 
-    debug: {
-      temClientId: !!clientId,
-      temClientSecret: !!clientSecret,
-      clientIdPrefix: clientId ? clientId.slice(0, 8) : null,
-      tipo: tipo,
-      usuarioId: usuarioId,
-      usuarioEmail: usuarioEmail
+
+  if (!clientId || !clientSecret) {
+    return res.status(500).json({ error: 'Credenciais Kiwify nao configuradas' })
+  }
+
+  // Mapeamento de produtos Kiwify
+  const produtos = {
+    avulso: '4C6INLA',
+    pro_mensal: 'UZVkAvI',
+    plus_mensal: 'rxjd1Xi'
+  }
+
+  const productId = produtos[tipo]
+  if (!productId) {
+    return res.status(400).json({ error: 'Tipo de plano invalido' })
+  }
+
+  try {
+    // Obter token de acesso Kiwify
+    const tokenResponse = await fetch('https://api.kiwify.com.br/v1/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        grant_type: 'client_credentials',
+        client_id: clientId,
+        client_secret: clientSecret
+      })
+    })
+
+    if (!tokenResponse.ok) {
+      const err = await tokenResponse.text()
+      return res.status(400).json({ error: 'Erro ao autenticar Kiwify', details: err })
     }
-  })
+
+    const tokenData = await tokenResponse.json()
+    const accessToken = tokenData.access_token
+
+    // Criar checkout
+    const checkoutResponse = await fetch('https://api.kiwify.com.br/v1/checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      },
+      body: JSON.stringify({
+        product_id: productId,
+        email: usuarioEmail || 'cliente@juridiquespopular.com.br',
+        customer: { id: usuarioId },
+        order: {
+          extra_ref: JSON.stringify({ tipo, usuarioId, processoHash })
+        }
+      })
+    })
+
+    if (!checkoutResponse.ok) {
+      const err = await checkoutResponse.text()
+      return res.status(400).json({ error: 'Erro ao criar checkout', details: err })
+    }
+
+    const checkoutData = await checkoutResponse.json()
+
+    return res.status(200).json({ 
+      url: checkoutData.url,
+      checkoutId: checkoutData.id
+    })
+
+  } catch (error) {
+    console.error('Erro Kiwify:', error)
+    return res.status(500).json({ error: 'Erro interno', details: error.message })
+  }
 }
