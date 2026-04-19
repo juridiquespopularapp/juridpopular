@@ -1,0 +1,20 @@
+# Credenciais Mercado Pago - CONFIGURADAS ✅
+
+# 1. Acesse https://www.mercadopago.com.br/developers/panel
+# 2. Crie sua aplicação ou selecione uma existente
+# 3. Copie o ACCESS_TOKEN (para servidor) e cole abaixo
+
+MP_ACCESS_TOKEN=APP_USR-4290236814260258-040512-4162180d922cd3b5107ad12ba3775114-127981503
+
+MP_PUBLIC_KEY=APP_USR-67a28fca-5e4e-41a2-ac51-dd90a68c5de9
+
+# Para produção: use o token PRODUÇÃO
+# Para testes: use o token SANDBOX
+
+# === COMO USAR ===
+# 1. Cole suas chaves reais acima
+# 2. Copie o conteúdo para .env 
+# 3. OU configure diretamente no Vercel Dashboard > Settings > Environment Variables
+# 4. Redeploy a aplicação
+
+# ✅ PRONTO! Pagamentos funcionarão automaticamente
