@@ -1,40 +1,20 @@
 // src/lib/mercadopago.js
-// Funções do frontend para iniciar pagamentos
+// Funções do frontend para iniciar pagamentos via Kiwify
 
-// ── Cria sessão e abre o Stripe Checkout ────────────────────────
-export async function iniciarPagamento({ tipo, usuarioId, usuarioEmail, processoHash }) {
-  try {
-    console.log('Iniciando pagamento:', tipo, usuarioId)
-    
-    const resposta = await fetch('/api/criar-preferencia', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tipo, usuarioId, usuarioEmail, processoHash })
-    })
-
-    const dados = await resposta.json()
-    console.log('Resposta API:', dados)
-
-    if (!resposta.ok) {
-      throw new Error(dados.error || 'Erro ao criar pagamento')
-    }
-
-    // Redireciona para o Stripe Checkout
-    if (dados.url) {
-      window.location.href = dados.url
-    } else {
-      throw new Error('URL de pagamento não retornada')
-    }
-
-    return dados
-
-  } catch (erro) {
-    console.error('Erro ao iniciar pagamento:', erro)
-    throw erro
-  }
+const KIWIFY_URLS = {
+  avulso: 'https://pay.kiwify.com.br/Pysxk5p',
+  pro_mensal: 'https://pay.kiwify.com.br/UZVkAvI',
+  plus_mensal: 'https://pay.kiwify.com.br/rxjd1Xi'
 }
 
-// ── Verifica se o usuário tem plano ativo no Supabase ─────────────
+export async function iniciarPagamento({ tipo, usuarioId, usuarioEmail }) {
+  const url = KIWIFY_URLS[tipo]
+  if (!url) {
+    throw new Error('Tipo de plano inválido')
+  }
+  window.location.href = url
+}
+
 export async function verificarPlano(supabase, usuarioId) {
   if (!usuarioId) return { plano: 'gratuito', ativo: false }
 
@@ -46,7 +26,6 @@ export async function verificarPlano(supabase, usuarioId) {
 
   if (error || !data) return { plano: 'gratuito', ativo: false }
 
-  // Verifica se o plano ainda está dentro da validade
   if (data.plano_ativo && data.plano_expira) {
     const expira = new Date(data.plano_expira)
     if (expira > new Date()) {
@@ -57,7 +36,6 @@ export async function verificarPlano(supabase, usuarioId) {
   return { plano: 'gratuito', ativo: false }
 }
 
-// ── Verifica se o usuário pagou por um processo avulso ────────────
 export async function verificarProcessoAvulso(supabase, usuarioId, processoHash) {
   if (!usuarioId || !processoHash) return false
 
@@ -70,7 +48,6 @@ export async function verificarProcessoAvulso(supabase, usuarioId, processoHash)
 
   if (error || !data) return false
 
-  // Verifica se ainda está dentro do prazo de 7 dias
   const expira = new Date(data.expira_em)
   return expira > new Date()
 }
