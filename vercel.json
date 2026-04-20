@@ -3,7 +3,9 @@
     "env": {
       "VITE_SUPABASE_URL": "https://vyesosvlaizlksfgehkk.supabase.co",
       "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5ZXNvc3ZsYWl6bGtzZmdlaGtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2OTQxMDgsImV4cCI6MjA5MTI3MDEwOH0.4lrcUf9WeUb3Zvta4Dbt-P51-mLlbAYMeuqRyNAVcLI",
-      "VITE_OPENROUTER_API_KEY": "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"
+      "VITE_OPENROUTER_API_KEY": "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",
+      "KIWIFY_CLIENT_ID": "934ca9bf-72f0-4b30-aec5-0eb78ec0e8f4",
+      "KIWIFY_CLIENT_SECRET": "d6ef76343f86a9510991ddb4a27aac55b8fe884dcd0043cb355b83007ec810a0"
     }
   },
   "functions": {
@@ -12,9 +14,7 @@
     }
   },
   "rewrites": [
-    { "source": "/api/criar-preferencia", "destination": "/api/criar-preferencia.js" },
-    { "source": "/api/webhook", "destination": "/api/webhook.js" },
-    { "source": "/api/ana", "destination": "/api/ana.js" },
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
