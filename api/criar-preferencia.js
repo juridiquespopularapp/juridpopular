@@ -13,13 +13,18 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Metodo nao permitido' })
   }
 
-  const { tipo, usuarioId, usuarioEmail, processoHash } = req.body
+  console.log('Body recibido:', req.body)
+
+  const { tipo, usuarioId, usuarioEmail, processoHash } = req.body || {}
 
   const clientId = process.env.KIWIFY_CLIENT_ID
   const clientSecret = process.env.KIWIFY_CLIENT_SECRET
 
+  console.log('KIWIFY_CLIENT_ID:', clientId ? 'EXISTS' : 'MISSING')
+  console.log('KIWIFY_CLIENT_SECRET:', clientSecret ? 'EXISTS' : 'MISSING')
+
   if (!clientId || !clientSecret) {
-    return res.status(500).json({ error: 'Credenciais Kiwify nao configuradas' })
+    return res.status(500).json({ error: 'Credenciais Kiwify nao configuradas', envCheck: { clientId: !!clientId, clientSecret: !!clientSecret } })
   }
 
   // Mapeamento de produtos Kiwify
