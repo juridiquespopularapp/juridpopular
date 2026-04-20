@@ -27,6 +27,8 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Credenciais Kiwify nao configuradas', envCheck: { clientId: !!clientId, clientSecret: !!clientSecret } })
   }
 
+  console.log('Tipo recebido:', tipo)
+
   // Mapeamento de produtos Kiwify
   const produtos = {
     avulso: '4C6INLA',
@@ -35,8 +37,10 @@ export default async function handler(req, res) {
   }
 
   const productId = produtos[tipo]
+  console.log('ProductID:', productId)
+  
   if (!productId) {
-    return res.status(400).json({ error: 'Tipo de plano invalido' })
+    return res.status(400).json({ error: 'Tipo de plano invalido', tipoRecebido: tipo, produtos })
   }
 
   try {
