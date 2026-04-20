@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { verificarPlano } from '../../lib/mercadopago'
+import { verificarPlano } from '../../lib/kiwify'
 
 export default function PagamentoSucesso() {
   const [carregando, setCarregando] = useState(true)

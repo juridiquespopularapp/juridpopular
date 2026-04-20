@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { traduzirTexto, gerarHashProcesso, ehMesmoProcesso, limparMarkdown, LIMITE_GRATUITO_CHARS, PRECO_AVULSO, detectarTentativaBurla } from '../lib/gemini'
-import { iniciarPagamento, verificarPlano, verificarProcessoAvulso } from '../lib/mercadopago'
+import { iniciarPagamento, verificarPlano, verificarProcessoAvulso } from '../lib/kiwify'
 import ModalLogin from '../components/ModalLogin'
 import ModalPlanos from '../components/ModalPlanos'
 import AssistenteAna from '../components/AssistenteAna'

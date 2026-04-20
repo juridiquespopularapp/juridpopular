@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { iniciarPagamento } from '../lib/mercadopago'
+import { iniciarPagamento } from '../lib/kiwify'
 
 export default function ModalPlanos({ onClose, usuario, onAbrirLogin }) {
   const [carregandoPagamento, setCarregandoPagamento] = useState(false)
