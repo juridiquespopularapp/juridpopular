@@ -12,7 +12,7 @@ const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY
 export const LIMITE_GRATUITO_CHARS = 12800
 export const PERCENTUAL_NAO_LOGADO = 0.30
 export const PERCENTUAL_LOGADO = 0.60
-export const PRECO_AVULSO = 5.00
+export const PRECO_AVULSO = 5.00  // R$5 Kiwify
 
 const MODELOS = [
   { id: 'meta-llama/llama-3.1-8b-instruct', name: 'Llama 3' },

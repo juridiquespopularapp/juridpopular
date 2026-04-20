@@ -1,4 +1,4 @@
-// src/lib/mercadopago.js
+// src/lib/kiwify.js
 // Funções do frontend para iniciar pagamentos via Kiwify
 
 const KIWIFY_URLS = {
