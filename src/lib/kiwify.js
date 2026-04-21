@@ -2,7 +2,7 @@
 // Funções do frontend para iniciar pagamentos via Kiwify
 
 const KIWIFY_URLS = {
-  avulso: 'https://pay.kiwify.com.br/Pysxk5',
+  avulso: 'https://pay.kiwify.com.br/Pysxk5p',
   pro_mensal: 'https://pay.kiwify.com.br/UZVkAvI',
   plus_mensal: 'https://pay.kiwify.com.br/rxjd1Xi'
 }
