@@ -1,5 +1,5 @@
 // api/webhook.js
-// Stripe Webhook - ativa plano após pagamento
+// Kiwify Webhook - ativa plano após pagamento
 
 import { createClient } from '@supabase/supabase-js'
 
@@ -9,81 +9,99 @@ const supabase = createClient(
 )
 
 export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Content-Type', 'application/json')
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(200)
+    res.end()
+    return
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método não permitido' })
   }
 
-  const sig = req.headers['stripe-signature']
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET
-
-  let event
-
   try {
-    // Verifica se tem signature (produção) ou não (teste)
-    if (endpointSecret && sig) {
-      event = req.body // Em produção, o Stripe assina o corpo
-    } else {
-      // Modo teste - aceita qualquer evento
-      event = req.body
-    }
-  } catch (err) {
-    console.error('Webhook parse error:', err.message)
-    return res.status(400).json({ error: 'Webhook parse error' })
-  }
+    const body = req.body
+    console.log('Webhook Kiwify recebido:', JSON.stringify(body))
 
-  // Só processa checkout.session.completed
-  if (event.type !== 'checkout.session.completed') {
-    return res.status(200).json({ ok: true, evento: event.type })
-  }
+    const eventType = body.event
+    const order = body.order || {}
+    const customerId = order.customer_id || order.customer?.id
+    const productId = order.product_id
+    const extraRef = order.extra_ref
 
-  const session = event.data.object
+    let tipo_plano = null
+    let usuario_id = customerId
+    let processo_hash = null
 
-  try {
-    const usuario_id = session.metadata?.usuario_id
-    const tipo_plano = session.metadata?.tipo_plano
-    const processo_hash = session.metadata?.processo_hash
-
-    console.log('Pagamento aprovado:', { usuario_id, tipo_plano })
-
-    if (!usuario_id || !tipo_plano) {
-      return res.status(400).json({ error: 'Metadata incompleto' })
+    if (extraRef) {
+      try {
+        const ref = JSON.parse(extraRef)
+        tipo_plano = ref.tipo
+        usuario_id = ref.usuarioId || customerId
+        processo_hash = ref.processoHash
+      } catch (e) {
+        console.log('extra_ref não é JSON:', extraRef)
+      }
     }
 
-    // Ativa o plano no Supabase
-    if (tipo_plano === 'pro_mensal') {
-      await supabase
-        .from('profiles')
-        .update({
-          plano: 'pro',
-          plano_ativo: true,
-          plano_inicio: new Date().toISOString(),
-          plano_expira: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-        })
-        .eq('id', usuario_id)
-
-    } else if (tipo_plano === 'plus_mensal') {
-      await supabase
-        .from('profiles')
-        .update({
-          plano: 'plus',
-          plano_ativo: true,
-          plano_inicio: new Date().toISOString(),
-          plano_expira: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-        })
-        .eq('id', usuario_id)
-
-    } else if (tipo_plano === 'avulso') {
-      await supabase
-        .from('processos_avulsos')
-        .insert({
-          usuario_id,
-          processo_hash,
-          pago_em: new Date().toISOString(),
-          expira_em: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-        })
+    if (!customerId && !usuario_id) {
+      return res.status(400).json({ error: 'Cliente não identificado' })
     }
 
-    return res.status(200).json({ ok: true })
+    if (eventType === 'order.completed' || eventType === 'payment_received') {
+      console.log('Pagamento confirmado:', { usuario_id, tipo_plano, productId })
+
+      if (!usuario_id) {
+        console.log('⚠️ Pagamento sem usuário - criando perfil anônimo')
+      }
+
+      if (tipo_plano === 'pro_mensal' || productId === 'UZVkAvI') {
+        await supabase
+          .from('profiles')
+          .upsert({
+            id: usuario_id || 'anonimo_' + Date.now(),
+            plano: 'pro',
+            plano_ativo: true,
+            plano_inicio: new Date().toISOString(),
+            plano_expira: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+          }, { onConflict: 'id' })
+
+        console.log('✅ Plano PRO ativado para:', usuario_id)
+
+      } else if (tipo_plano === 'plus_mensal' || productId === 'rxjd1Xi') {
+        await supabase
+          .from('profiles')
+          .upsert({
+            id: usuario_id || 'anonimo_' + Date.now(),
+            plano: 'plus',
+            plano_ativo: true,
+            plano_inicio: new Date().toISOString(),
+            plano_expira: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+          }, { onConflict: 'id' })
+
+        console.log('✅ Plano PLUS ativado para:', usuario_id)
+
+      } else if (tipo_plano === 'avulso' || productId === 'Pysxk5p' || productId === '4C6INLA') {
+        await supabase
+          .from('processos_avulsos')
+          .upsert({
+            id: Date.now().toString(),
+            usuario_id: usuario_id || 'anonimo',
+            processo_hash: processo_hash || 'processo_' + Date.now(),
+            pago_em: new Date().toISOString(),
+            expira_em: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+          }, { onConflict: 'id' })
+
+        console.log('✅ Processo avulso ativado para:', usuario_id)
+      }
+
+      return res.status(200).json({ ok: true })
+    }
+
+    return res.status(200).json({ ok: true, evento: eventType })
 
   } catch (error) {
     console.error('Webhook error:', error)
