@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { traduzirTexto, gerarHashProcesso, ehMesmoProcesso, limparMarkdown, LIMITE_GRATUITO_CHARS, PRECO_AVULSO, detectarTentativaBurla } from '../lib/gemini'
-import { iniciarPagamento, verificarPlano, verificarProcessoAvulso } from '../lib/kiwify'
+import { iniciarPagamento, verificarPlano, verificarProcessoAvulso, verificarProcessoPendente, limparProcessoPendente } from '../lib/kiwify'
 import ModalLogin from '../components/ModalLogin'
 import ModalPlanos from '../components/ModalPlanos'
 import AssistenteAna from '../components/AssistenteAna'
@@ -74,13 +74,15 @@ function dividirParagrafos(texto) {
 
 function TextoClicavel({ texto, podeOuvir, onClicarParagrafo, paragrafoAtivo, tocando }) {
   const paragrafos = dividirParagrafos(texto)
+  const bloquearCopia = (e) => { e.preventDefault(); return false }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', onCopy: bloquearCopia, onContextMenu: bloquearCopia }}>
       {podeOuvir && (
         <div style={{ fontSize: 11, color: '#a0b0c8', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
           <span>👆</span><span>Toque num parágrafo para iniciar a leitura</span>
         </div>
       )}
+      <div style={{ userSelect: 'none', WebkitUserSelect: 'none' }}>
       {paragrafos.map((p, i) => {
         const esteAtivo = paragrafoAtivo === i && tocando
         return (
@@ -91,13 +93,14 @@ function TextoClicavel({ texto, podeOuvir, onClicarParagrafo, paragrafoAtivo, to
               cursor: podeOuvir ? 'pointer' : 'default',
               background: esteAtivo ? 'rgba(26,170,138,0.25)' : 'transparent',
               borderLeft: esteAtivo ? '3px solid #1aaa8a' : '3px solid transparent',
-              transition: 'all 0.2s ease', userSelect: podeOuvir ? 'none' : 'text',
+              transition: 'all 0.2s ease', userSelect: 'none',
             }}>
             {esteAtivo && <span style={{ display: 'inline-block', marginRight: 6, fontSize: 10, background: '#1aaa8a', color: '#fff', borderRadius: 4, padding: '1px 5px', verticalAlign: 'middle' }}>▶ lendo</span>}
             {p}
           </div>
         )
       })}
+      </div>
     </div>
   )
 }
@@ -230,6 +233,21 @@ useEffect(() => {
     }
   }, [resultado, ttsSecao])
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const pago = params.get('pagamento')
+    if (pago === 'sucesso') {
+      const pendente = verificarProcessoPendente()
+      if (pendente) {
+        setTexto(pendente.texto)
+        setResultado({ resumo: pendente.resumo, traducao: pendente.texto, traducaoCompleta: pendente.texto, travado: false, percentualExibido: 100, totalBlocos: 1, caracteresUsados: pendente.texto.length })
+        limparProcessoPendente()
+        window.history.replaceState({}, '', window.location.pathname)
+        setAviso('Pagamento confirmado! Processo liberado.')
+      }
+    }
+  }, [])
+
   function lerAPartirDe(indice, pars) {
     if (!window.speechSynthesis) { setErro('Seu navegador não suporta Text-to-Speech.'); return }
     window.speechSynthesis.cancel()
@@ -358,19 +376,19 @@ setErro(err.message || 'Erro ao traduzir. Tente novamente.')
 
   async function handlePagarAvulso() {
     if (!usuario) { setMostrarLogin(true); return }
-    try { await iniciarPagamento({ tipo: 'avulso', usuarioId: usuario.id, usuarioEmail: usuario.email, processoHash: hashUltimoProcesso.current }) }
+    try { await iniciarPagamento({ tipo: 'avulso', usuarioId: usuario.id, usuarioEmail: usuario.email, processoHash: hashUltimoProcesso.current, texto: texto, resumo: resultado?.resumo }) }
     catch (e) { setErro('Erro ao iniciar pagamento. Tente novamente.') }
   }
 
   async function handleAssinarPRO() {
     if (!usuario) { setMostrarLogin(true); return }
-    try { await iniciarPagamento({ tipo: 'pro_mensal', usuarioId: usuario.id, usuarioEmail: usuario.email }) }
+    try { await iniciarPagamento({ tipo: 'pro_mensal', usuarioId: usuario.id, usuarioEmail: usuario.email, texto: texto, resumo: resultado?.resumo }) }
     catch (e) { setErro('Erro ao iniciar pagamento. Tente novamente.') }
   }
 
   async function handleAssinarPLUS() {
     if (!usuario) { setMostrarLogin(true); return }
-    try { await iniciarPagamento({ tipo: 'plus_mensal', usuarioId: usuario.id, usuarioEmail: usuario.email }) }
+    try { await iniciarPagamento({ tipo: 'plus_mensal', usuarioId: usuario.id, usuarioEmail: usuario.email, texto: texto, resumo: resultado?.resumo }) }
     catch (e) { setErro('Erro ao iniciar pagamento. Tente novamente.') }
   }
 
