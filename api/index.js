@@ -11,7 +11,7 @@ const HANDLERS = {
   '/api/webhook': () => import('./webhook.js'),
   '/api/ana': () => import('./ana.js'),
   '/api/criar-preferencia': () => import('./criar-preferencia.js'),
-  '/api/test-keys': () => import('./test-keys.js')
+
 }
 
 // Middleware Vite para APIs

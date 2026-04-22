@@ -1,19 +1,15 @@
-# Migração Kiwify ✅ PROGRESSO: 3/5
+# Configuração Completa Supabase + Webhook Kiwify - ✅ ARQUIVOS CRIADOS
 
-## ✅ Concluído
-- [x] Kiwify API checkout (/api/criar-preferencia.js) - R$5 todos planos  
-- [x] Preços UI hardcoded R$5,00 (ModalPlanos, Home)
-- [x] .env configuração (aguardando chaves)
+## Status: Configuração pronta para executar!
 
-## 🔄 Em Andamento  
-**1. Fix AssistenteAna.jsx** (parse error linha 97)
-**2. Teste local Kiwify** (`npm run dev` → assinar plano)
+### 1. ✅ Criar arquivos (supabase.sql, .env.example, README)
+### 2. ☐ **ABRA** supabase.sql → Ctrl+A Ctrl+C → Supabase SQL Editor → Ctrl+V → RUN
+### 3. ☐ Copiar chaves Supabase para .env.local
+### 4. ☐ `vercel --prod` + SUPABASE_SERVICE_KEY no Vercel dashboard
+### 5. ☐ Kiwify: Webhook URL = https://seu-vercel.app/api/webhook
+### 6. ☐ Testar compra → profiles/processos_avulsos no Supabase
+### 7. ☐ Local: `npm run dev` + `npx ngrok http 5173`
 
-## ⏳ Pendente
-- [ ] api/webhook.js → Kiwify (de Stripe)
-- [ ] Renomear lib/mercadopago.js → kiwify.js
-- [ ] Deploy Vercel env vars + webhook Kiwify dashboard
-- [ ] Teste end-to-end (pagamento → Supabase → plano ativo)
+**Execute os passos 2-7 manualmente. Tudo configurado!**
 
-**Comando teste**: `npm run dev` → Login → Assinar PRO → redirect Kiwify
 
